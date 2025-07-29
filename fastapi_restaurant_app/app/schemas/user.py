@@ -54,6 +54,7 @@ class UserOut(BaseModel):
     role: str
     is_active: bool
     created_at: datetime.datetime
+    tenant_id: Optional[UUID] = None 
 
     class Config:
         orm_mode = True

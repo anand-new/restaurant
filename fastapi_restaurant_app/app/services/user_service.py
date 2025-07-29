@@ -1,9 +1,11 @@
+from typing import List
 from fastapi import HTTPException
 from sqlalchemy import UUID
 from sqlalchemy.orm import Session
 from app.exceptions.http_exceptions import AppException
+from app.models.role import Role
 from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
+from app.schemas.user import UserCreate, UserOut, UserUpdate
 from passlib.hash import pbkdf2_sha256 as hash
 import uuid
 from app.models.restaurant import Restaurant, UserRestaurant
@@ -38,6 +40,9 @@ def create_user(current_user, user_data: UserCreate, db: Session):
         raise AppException(status_code=400,
                 error_code="EMAIL_ALREADY_EXISTS", error_message="Email already exists for this tenant.")
 
+    role = db.query(Role).filter(Role.name == user_data.role).first()
+    if not role:
+        raise AppException(status_code=400,error_code="ROLE_DOES_NOT_EXIST", error_message=f"Role '{user_data.role}' not found")
     # 🔒 Create user with hashed password
     hashed_password = hash.hash(user_data.password)
 
@@ -47,7 +52,7 @@ def create_user(current_user, user_data: UserCreate, db: Session):
         email=user_data.email,
         password_hash=hashed_password,
         tenant_id=user_data.tenant_id,
-        role_id=user_data.role_id,
+        role_id=role.id,
         created_by=current_user.id
     )
     db.add(new_user)
@@ -59,7 +64,7 @@ def create_user(current_user, user_data: UserCreate, db: Session):
         "username": new_user.username,
         "email": new_user.email,
         "tenant_id": str(new_user.tenant_id),
-        "role_id": new_user.role_id
+        "role": role.name
     }
 
 
@@ -151,4 +156,17 @@ def list_all_users_for_superadmin(current_user: User, db: Session) -> list[User]
             error_message="Only superadmin can view all users"
         )
 
-    return db.query(User).filter(User.tenant_id == current_user.tenant_id, User.is_active == True).all()
+    users =  db.query(User).filter(User.tenant_id == current_user.tenant_id, User.is_active == True).all()
+    user_out_list: List[UserOut] = [
+    UserOut(
+        id=user.id,
+        username=user.username,
+        email=user.email,
+        role=user.role.name if user.role else "N/A",
+        is_active=user.is_active,
+        created_at=user.created_at,
+        tenant_id=user.tenant_id
+    )
+    for user in users
+    ]
+    return user_out_list

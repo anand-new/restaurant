@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from uuid import UUID
 
 from app.schemas.restaurant import RestaurantCreate, RestaurantUpdate, RestaurantOut
-from app.db.engine import get_db
+from app.db.deps import get_db
 from app.middlewares.role_check import get_current_user
 from app.services import restaurant_service
 

@@ -21,7 +21,7 @@ def create_user_route(
     current_user=Depends(get_current_user)
 ):
     tenant_id = request.state.tenant_id
-    user_role = request.state.role
+    user_role = current_user.role.name
 
     # 🛡️ Only superadmin can assign other tenant_id
     if user_data.tenant_id and user_role != "superadmin":
