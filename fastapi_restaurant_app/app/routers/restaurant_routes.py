@@ -29,4 +29,4 @@ def update(restaurant_id: UUID, data: RestaurantUpdate, db: Session = Depends(ge
 
 @router.delete("/{restaurant_id}")
 def delete(restaurant_id: UUID, db: Session = Depends(get_db), user=Depends(get_current_user)):
-    return restaurant_service.delete_restaurant(db, restaurant_id, user)
+    return restaurant_service.delete_restaurant( restaurant_id, db, user)

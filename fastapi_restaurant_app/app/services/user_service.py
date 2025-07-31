@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session
 from app.exceptions.http_exceptions import AppException
 from app.models.role import Role
 from app.models.user import User
-from app.schemas.user import UserCreate, UserOut, UserUpdate
+from app.schemas.user import UserCreate, UserOut, UserResponse, UserUpdate
 from passlib.hash import pbkdf2_sha256 as hash
 import uuid
 from app.models.restaurant import Restaurant, UserRestaurant
@@ -74,7 +74,16 @@ def get_user_by_id(user_id: UUID, db: Session, user: User) -> User:
         raise AppException(404, "USER_NOT_FOUND", "User not found")
 
     assert_tenant_access(target_user.tenant_id, user)
-    return target_user
+    
+    return UserResponse(
+        id=target_user.id,
+        username=target_user.username,
+        email=target_user.email,
+        role=target_user.role.name if target_user.role else "N/A",
+        is_active=target_user.is_active,
+        # created_at=user.created_at,
+        tenant_id=target_user.tenant_id
+    )
 
 
 def update_user(user_id: UUID, payload: UserUpdate, db: Session, user: User) -> User:
@@ -84,12 +93,35 @@ def update_user(user_id: UUID, payload: UserUpdate, db: Session, user: User) -> 
 
     assert_tenant_access(target_user.tenant_id, user)
 
-    for field, value in payload.dict(exclude_unset=True).items():
+    update_data = payload.dict(exclude_unset=True)
+
+    # Handle role update separately
+    if "role" in update_data:
+        if user.role.name != "superadmin":
+            raise AppException(403, "FORBIDDEN", "Only superadmin can change roles")
+
+        role_name = update_data.pop("role")
+        role_obj = db.query(Role).filter(Role.name == role_name).first()
+        if not role_obj:
+            raise AppException(400, "INVALID_ROLE", f"Role '{role_name}' does not exist")
+        target_user.role = role_obj
+
+
+    # Update other fields
+    for field, value in update_data.items():
         setattr(target_user, field, value)
 
     db.commit()
     db.refresh(target_user)
-    return target_user
+    return UserResponse(
+        id=target_user.id,
+        username=target_user.username,
+        email=target_user.email,
+        role=target_user.role.name if target_user.role else "N/A",
+        is_active=target_user.is_active,
+        # created_at=user.created_at,
+        tenant_id=target_user.tenant_id
+    )
 
 
 def delete_user(user_id: UUID, db: Session, user: User):

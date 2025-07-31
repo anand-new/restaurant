@@ -45,19 +45,19 @@ def create_user_route(
 
 
 # GET /users/{user_id} - Read user details
-@router.get("/{user_id}", response_model=UserResponse,  dependencies=[Depends(RoleChecker(["ADMIN", "SUPERADMIN"]))])
+@router.get("/{user_id}", response_model=UserResponse,  dependencies=[Depends(RoleChecker(["admin", "superadmin"]))])
 def read_user(user_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return get_user_by_id(user_id=user_id, db=db, user=current_user)
 
 
 # # # PUT /users/{user_id} - Update user
-@router.put("/{user_id}", response_model=UserResponse, dependencies=[Depends(RoleChecker(["ADMIN", "SUPERADMIN"]))])
+@router.put("/{user_id}", response_model=UserResponse, dependencies=[Depends(RoleChecker(["admin", "superadmin"]))])
 def update_user_details(user_id: UUID, payload: UserUpdate, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return update_user(user_id=user_id, payload=payload, db=db, user=current_user)
 
 
 # # DELETE /users/{user_id} - Soft delete user
-@router.delete("/{user_id}", summary="Deactivate user", dependencies=[Depends(RoleChecker(["ADMIN", "SUPERADMIN"]))])
+@router.delete("/{user_id}", summary="Deactivate user", dependencies=[Depends(RoleChecker(["admin", "superadmin"]))])
 def deactivate_user(user_id: UUID, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
     return delete_user(user_id=user_id, db=db, user=current_user)
 

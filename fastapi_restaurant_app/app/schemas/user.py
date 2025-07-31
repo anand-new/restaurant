@@ -21,7 +21,7 @@ class UserCreate(BaseModel):
 
 
 class UserUpdate(BaseModel):
-    full_name: Optional[str]
+    # full_name: Optional[str]
     email: Optional[EmailStr]
     role: Optional[str]  # Only editable by SUPERADMIN logic if needed
 
@@ -29,10 +29,10 @@ class UserResponse(BaseModel):
     id: UUID
     username: str
     email: EmailStr
-    full_name: Optional[str]
+    # full_name: Optional[str]
     role: str
     is_active: bool
-    # tenant_id: UUID
+    tenant_id: UUID
 
     class Config:
         from_attributes = True

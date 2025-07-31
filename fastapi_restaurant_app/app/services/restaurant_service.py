@@ -59,7 +59,7 @@ def get_restaurant(db: Session, restaurant_id: uuid.UUID, user):
     assert_tenant_access(restaurant.tenant_id, user)
     return restaurant
 
-def delete_restaurant(restaurant_id: UUID, user: User, db: Session):
+def delete_restaurant(restaurant_id: UUID, db: Session, user: User):
     restaurant = db.query(Restaurant).filter(Restaurant.id == restaurant_id).first()
 
     if not restaurant:
@@ -88,8 +88,8 @@ def delete_restaurant(restaurant_id: UUID, user: User, db: Session):
 def list_restaurants(db: Session, user):
     # SUPERADMIN can view all restaurants in their tenant
     # Others see only restaurants they manage
-    if user.role.name == "SUPERADMIN":
-        return db.query(Restaurant).filter_by(tenant_id=user.tenant_id).all()
+    if user.role.name.lower() == "superadmin":
+        return db.query(Restaurant).all()
 
     return (
         db.query(Restaurant)

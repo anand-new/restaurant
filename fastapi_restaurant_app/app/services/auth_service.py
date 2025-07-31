@@ -36,7 +36,7 @@ def authenticate_user(username: str, password: str, db: Session):
     return user
 
 def change_password(user: User, req: PasswordChangeRequest, db: Session):
-    if not hash.verify(req.old_password, user.password_hash):
+    if not hash.verify(req.current_password, user.password_hash):
         raise AppException(status_code=400, error_code="INVALID_OLD_PASSWORD", error_message="Old password is incorrect")
     user.password_hash = hash.hash(req.new_password)
     db.commit()
@@ -69,7 +69,7 @@ def initiate_forgot_password(req: PasswordResetRequest, db: Session):
 
 
 def confirm_reset_password(req: PasswordResetConfirm, db: Session):
-    token_data = PASSWORD_RESET_TOKENS.get(req.token)
+    token_data = PASSWORD_RESET_TOKENS.get(req.reset_token)
     if not token_data or token_data["expires_at"] < datetime.datetime.utcnow():
         raise AppException(status_code=400, error_code="INVALID_TOKEN", error_message="Reset token is invalid or expired")
 
@@ -80,7 +80,7 @@ def confirm_reset_password(req: PasswordResetConfirm, db: Session):
     user.password_hash = hash.hash(req.new_password)
     db.commit()
 
-    del PASSWORD_RESET_TOKENS[req.token]
+    del PASSWORD_RESET_TOKENS[req.reset_token]
     return {"message": "Password reset successful"}
 
 
