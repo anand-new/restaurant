@@ -6,6 +6,8 @@ class Token(BaseModel):
     token_type: str
     username: str
     email: str
+    role: str
+    isNew: bool
     tenant_id: UUID
 
 class LoginRequest(BaseModel):

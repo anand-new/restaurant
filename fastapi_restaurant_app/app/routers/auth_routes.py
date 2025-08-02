@@ -15,6 +15,10 @@ from app.middlewares.role_check import get_current_user
 from app.exceptions.http_exceptions import AppException
 from app.core.jwt import create_access_token
 from app.db.deps import get_db
+from app.schemas.auth import LoginRequest
+from app.models import User
+from app.core.jwt import create_access_token
+from app.services.auth_service import authenticate_user
 
 router = APIRouter()
 
@@ -37,8 +41,40 @@ def login(form_data: OAuth2PasswordRequestForm = Depends(), db: Session = Depend
         "token_type": "bearer",
         "username": user.username,
         "email": user.email,
+        "role": user.role.name,
+        "isNew": user.is_new,
         "tenant_id": str(user.tenant_id)
     }
+
+
+
+@router.post("/login", response_model=Token)
+def login_with_body(payload: LoginRequest, db: Session = Depends(get_db)):
+    user = authenticate_user(payload.username, payload.password, db)
+    if not user:
+        raise AppException(
+            status_code=401,
+            error_code="INVALID_CREDENTIALS",
+            error_message="Invalid credentials"
+        )
+
+    access_token = create_access_token({
+        "sub": user.username,
+        "user_id": str(user.id),
+        "tenant_id": str(user.tenant_id),
+        "role": user.role.name
+    })
+
+    return {
+        "access_token": access_token,
+        "token_type": "bearer",
+        "username": user.username,
+        "email": user.email,
+        "role": user.role.name,
+        "isNew": user.is_new,
+        "tenant_id": str(user.tenant_id)
+    }
+
 
 
 @router.post("/logout")

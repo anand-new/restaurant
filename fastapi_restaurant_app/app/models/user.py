@@ -29,6 +29,7 @@ class User(Base):
     tenant_id = Column(UUID(as_uuid=True), nullable=False, default=uuid.uuid4)  # NEW
     force_password_reset = Column(Boolean, default=True) 
     is_active = Column(Boolean, default=True)
+    is_new = Column(Boolean, default=True)
 
     role = relationship("Role")
     restaurants = relationship("UserRestaurant", back_populates="user")

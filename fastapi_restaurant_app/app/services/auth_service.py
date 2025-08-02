@@ -10,6 +10,7 @@ from app.models.user import User
 from app.schemas.auth import PasswordResetRequest, PasswordResetConfirm, PasswordChangeRequest
 from app.exceptions.http_exceptions import AppException
 from sqlalchemy.orm import Session
+from sqlalchemy import or_
 
 # def authenticate_user(username: str, password: str):
 #     user = get_user_by_username(username)
@@ -20,7 +21,10 @@ from sqlalchemy.orm import Session
 # app/services/auth_service.py
 def authenticate_user(username: str, password: str, db: Session):
     # db = SessionLocal()
-    user = db.query(User).filter(User.username == username).first()
+    # user = db.query(User).filter(User.username == username).first()
+    user = db.query(User).filter(
+        or_(User.username == username, User.email == username)
+    ).first()
     if not user:
         raise AppException(
             status_code=401,
@@ -39,12 +43,14 @@ def change_password(user: User, req: PasswordChangeRequest, db: Session):
     if not hash.verify(req.current_password, user.password_hash):
         raise AppException(status_code=400, error_code="INVALID_OLD_PASSWORD", error_message="Old password is incorrect")
     user.password_hash = hash.hash(req.new_password)
+    user.is_new = False
     db.commit()
     return {"message": "Password changed successfully"}
 
 
 def reset_password_first_time(user: User, new_password: str, db: Session):
     user.password_hash = hash.hash(new_password)
+    user.is_new = False
     db.commit()
     return {"message": "Password reset successful"}
 
@@ -78,6 +84,7 @@ def confirm_reset_password(req: PasswordResetConfirm, db: Session):
         raise AppException(status_code=404, error_code="USER_NOT_FOUND", error_message="User not found")
 
     user.password_hash = hash.hash(req.new_password)
+    user.is_new = False
     db.commit()
 
     del PASSWORD_RESET_TOKENS[req.reset_token]
