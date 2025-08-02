@@ -5,7 +5,7 @@ from app.db import engine, Base
 from app.models import *
 
 # Import your routers
-from app.routers import auth_routes, orders_routes, prediction_routes,restaurant_upload_routes,user_routes,restaurant_routes
+from app.routers import auth_routes, orders_routes, prediction_routes,restaurant_upload_routes,user_routes,restaurant_routes,role_routes
 from app.routers import orders_routes
 
 
@@ -58,6 +58,7 @@ app.include_router(auth_routes.router, prefix="/auth", tags=["Auth"])
 app.include_router(user_routes.router, prefix="/users", tags=["Users"])
 app.include_router(restaurant_upload_routes.router, prefix="/restaurants", tags=["Restaurants"])
 app.include_router(restaurant_routes.router, prefix="/restaurants", tags=["Restaurants"])
+app.include_router(role_routes.router, prefix="/api", tags=["Roles"])
 # app.include_router(uploads.router, prefix="/upload", tags=["Uploads"])
 app.include_router(orders_routes.router, prefix="/orders", tags=["Orders"])
 app.include_router(prediction_routes.router, prefix="/predict", tags=["Prediction"])
